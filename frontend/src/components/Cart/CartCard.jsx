@@ -30,7 +30,7 @@ export const CartCard = ({ item }) => {
         <div className="1 flex justify-center  ">
           <div className="image md:w-52 md:max-h-48  rounded-md overflow-hidden border border-blue-">
             <img
-              src={`${apiUrl}${item.imagePath}`}
+              src={`http://localhost:3001${item.imagePath}`}
               alt=""
               className="w-full h-full object-cover"
             />

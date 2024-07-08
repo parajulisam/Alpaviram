@@ -209,7 +209,7 @@ const FilterScreen = () => {
 
         <div className="title flex justify-center  py-2 my-4">
           <span className="font-medium text-xl uppercase md:text-2xl px-4 tracking-wide ">
-            All Products under category "Cameras"
+            {/* All Products under category "Cameras" */}
           </span>
         </div>
 

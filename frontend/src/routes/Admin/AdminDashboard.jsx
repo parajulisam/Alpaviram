@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 const AdminDashboard = () => {
   const [allProducts, setAllProducts] = useState([]);
@@ -95,28 +96,28 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex justify-center items-center bg-[#D9D9D9] py-28 gap-10 flex-col">
-      <h1 className="text-4xl ">Admin Dashboard</h1>
+      <h1 className="text-4xl">Admin Dashboard</h1>
       <div className="font-light text-lg flex max-w-2xl gap-4">
-        <div className="px-6 py-3 bg-white">
+        <Link to="/admin/products" className="px-6 py-3 bg-white">
           <h2 className="text-2xl mb-2 font-medium">Products</h2>
           <p className="text-2xl flex justify-center">{allProducts.length}</p>
-        </div>
-        <div className="px-6 py-3 bg-white">
+        </Link>
+        <Link to="/admin/category" className="px-6 py-3 bg-white">
           <h2 className="text-2xl mb-2 font-medium">Categories</h2>
           <p className="text-2xl flex justify-center">{allCategories.length}</p>
-        </div>
-        <div className="px-6 py-3 bg-white">
+        </Link>
+        <Link to="/admin/brands" className="px-6 py-3 bg-white">
           <h2 className="text-2xl mb-2 font-medium">Brands</h2>
           <p className="text-2xl flex justify-center">{allBrands.length}</p>
-        </div>
-        <div className="px-6 py-3 bg-white">
+        </Link>
+        <Link to="/admin/orders" className="px-6 py-3 bg-white">
           <h2 className="text-2xl mb-2 font-medium">Orders</h2>
           <p className="text-2xl flex justify-center">{orders.length}</p>
-        </div>
-        <div className="px-6 py-3 bg-white">
+        </Link>
+        <Link to="/admin/users" className="px-6 py-3 bg-white">
           <h2 className="text-2xl mb-2 font-medium">Users</h2>
           <p className="text-2xl flex justify-center">{users.length}</p>
-        </div>
+        </Link>
       </div>
     </div>
   );

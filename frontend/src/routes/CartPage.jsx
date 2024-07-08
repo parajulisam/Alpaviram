@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 const CartPage = () => {
   const { cartItems, total } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
+  
 
   // useEffect(() => {
   //   const cartItems = localStorage.getItem("cart");
