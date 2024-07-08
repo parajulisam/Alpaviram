@@ -1,12 +1,18 @@
 import { Sequelize } from "sequelize";
+import pg from "pg"
 
-export const sequelize = new Sequelize("Alpaviram", "root", "", {
-  host: "localhost",
-  dialect: "mysql",
-  define: {
-    freezeTableName: true,
-  },
-});
+// export const sequelize = new Sequelize("Alpaviram", "root", "", {
+//   host: "localhost",
+//   dialect: "mysql",
+//   define: {
+//     freezeTableName: true,
+//   },
+// });
+
+
+export const sequelize = new Sequelize('postgresql://postgres.zggvyibhbndhoultupvl:Alpaviram@527969@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres', {
+  dialectModule: pg
+})
 
 // const connectdb = async () => {
 //   try {

@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import Footer from "../components/Footer/footer";
+import Footer from "../components/Footer/Footer";
 import NavBar from "../components/NavBar/NavBar";
 import { ToastContainer } from "react-toastify";
 

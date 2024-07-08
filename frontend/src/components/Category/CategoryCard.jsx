@@ -11,7 +11,7 @@ const CategoryCard = ({ category }) => {
         </div>
         <img
           // src={`${apiUrl}${imagePath}`}
-          src={imagePath}
+            src={`http://localhost:3001${imagePath}`}
           alt=""
           className="h-52 w-56 object-cover "
         />

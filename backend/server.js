@@ -4,7 +4,11 @@ import { db } from "./config/db.js";
 import bodyParser from "body-parser";
 import cors from "cors";
 import path from "path";
-
+// const express = require("express")
+// const api = require('./routes/index.js')
+// const db = require('./config/db.js').db
+// const cors = require("cors")
+// const path = require('path')
 const PORT = 3001;
 const app = express();
 
@@ -27,6 +31,7 @@ app.use(
     credentials: true,
   })
 );
+// app.use(cors(*))
 app.get("/", (req, res) => {
   res.send("From the FYP server");
 });
@@ -42,5 +47,5 @@ app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
 app.use(errorHandler);
 app.listen(PORT, () => {
-  console.log("Server is running on port ", PORT);
+  console.log("Server is running on port ", PORT ?? 3001);
 });
