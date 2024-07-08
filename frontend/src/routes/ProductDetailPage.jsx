@@ -99,7 +99,7 @@ const ProductDetailPage = () => {
           {/* image grid 1 */}
           <div className="image border border-gray-200 max-h-[550px] ">
             <img
-              src={`${apiUrl}${productDetails.imagePath}`}
+              src={`http://localhost:3001${productDetails.imagePath}`}
               alt=""
               className="w-full h-full rounded-md  "
             />

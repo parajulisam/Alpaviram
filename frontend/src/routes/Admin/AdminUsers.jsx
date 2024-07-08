@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 const AdminUsers = () => {
   const { token } = useSelector((state) => state.token);
   const [users, setUsers] = useState([]);
+
   useEffect(() => {
     const fetchUsers = async () => {
       const { data } = await axios.get(
@@ -22,8 +23,21 @@ const AdminUsers = () => {
       setUsers(data);
     };
     fetchUsers();
-  }, []);
+  }, [token]);
 
+  const deleteUser = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/v1/user/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+      setUsers(users.filter((user) => user.id !== id));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
 
   return (
     <div className="flex justify-center items-center bg-[#D9D9D9] py-10 gap-10 flex-col">
@@ -49,9 +63,12 @@ const AdminUsers = () => {
                 <td className="p-3">
                   <div className="justify-center flex gap-x-2">
                     <BiSolidEditAlt className="size-5 cursor-pointer" />
-                    <MdDelete className="size-5 text-red-500 cursor-pointer" />
+                    <MdDelete
+                      className="size-5 text-red-500 cursor-pointer"
+                      onClick={() => deleteUser(user._id)}
+                    />
                   </div>
-                </td>{" "}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -7,20 +7,22 @@ import { apiUrl } from "../../components/Product/ProductCard";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
 import DeleteProductModal from "../../components/Admin/Product/DeleteProductModal";
+
 const AdminProducts = () => {
   const [showModal, setShowModal] = useState(false);
   const toggleShowModal = () => {
     setShowModal(!showModal);
-    if (showModal == false) {
+    if (showModal === false) {
       document.body.classList.add("disable-scrolling");
     } else {
       document.body.classList.remove("disable-scrolling");
     }
   };
+
   const toggleUpdateShowModal = () => {
     setIsUpdate(!isUpdate);
     setShowModal(!showModal);
-    if (showModal == false) {
+    if (showModal === false) {
       document.body.classList.add("disable-scrolling");
     } else {
       document.body.classList.remove("disable-scrolling");
@@ -50,6 +52,7 @@ const AdminProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       const { data } = await axios.get("http://localhost:3001/api/v1/products");
+      console.log(data);  // Log data to console to inspect structure
       setAllProducts(data);
     };
     fetchProducts();
@@ -106,7 +109,7 @@ const AdminProducts = () => {
             className="p-2 bg-[#2c2c2c] px-4 rounded-md text-white cursor-pointer"
             onClick={toggleShowModal}
           >
-            Add Prodcut
+            Add Product
           </p>
           <div className="min-w-[250px] bg-[#D9D9D9] p-5 rounded-md relative">
             <IoSearch className="absolute left-2 top-3 size-4" />
@@ -121,8 +124,8 @@ const AdminProducts = () => {
         </div>
       </div>
 
-      <div className=" px-4 md:px-20 pb-10  overflow-x-scroll ">
-        <table className="table-auto bg-[#2C2C2C] md:w-full  ">
+      <div className=" px-4 md:px-20 pb-10 overflow-x-scroll ">
+        <table className="table-auto bg-[#2C2C2C] md:w-full ">
           <thead className="rounded-lg">
             <tr>
               <th></th>
@@ -130,12 +133,13 @@ const AdminProducts = () => {
               <th className="p-3 py-4 text-start text-white">Name</th>
               <th className="p-3 py-4 text-start text-white">Price</th>
               <th className="p-3 py-4 text-start text-white">In Stock</th>
-              <th className="p-3 py-4 text-start text-white">Category</th>
-              <th className="p-3 py-4 text-start text-white">Brand</th>
+              <th className="p-3 py-4 text-start text-white">Category ID</th>
+              <th className="p-3 py-4 text-start text-white">Brand ID</th>
+              <th className="p-3 py-4 text-start text-white">Photo</th>
               <th className="p-3 py-4 text-center text-white">Options</th>
             </tr>
           </thead>
-          <tbody className="bg-white ">
+          <tbody className="bg-white">
             {productsToDisplay.map((product, index) => {
               return (
                 <DropdownTableRow
@@ -147,8 +151,15 @@ const AdminProducts = () => {
                       <td className="p-3">{product.name}</td>
                       <td className="p-3">{product.price}</td>
                       <td className="p-3">{product.countInStock}</td>
-                      <td className="p-3">{product.category.name}</td>
-                      <td className="p-3">{product.brand.name}</td>
+                      <td className="p-3">{product.category_id || "N/A"}</td>
+                      <td className="p-3">{product.brand_id || "N/A"}</td>
+                      <td className="p-3">
+                        <img
+                          src={`http://localhost:3001${product.imagePath}`}
+                          alt={product.name}
+                          className="object-fill rounded-lg max-w-[50px]"
+                        />
+                      </td>
                       <td className="p-3">
                         <div className="justify-center flex gap-x-2">
                           <BiSolidEditAlt
@@ -173,7 +184,7 @@ const AdminProducts = () => {
                     <div className="p-2 bg-gray-100">
                       <div className="flex gap-x-3">
                         <img
-                          src={`${apiUrl}${product.imagePath}`}
+                          src={`http://localhost:3001${product.imagePath}`}
                           alt="no image"
                           className="object-fill rounded-lg max-w-[300px]"
                         />
@@ -194,7 +205,7 @@ const AdminProducts = () => {
         </table>
         <div className="w-full bg-gray-200 p-2 flex justify-end gap-x-2">
           <div
-            className={`px-2 bg-white rounded-sm  text-xs shadow-sm py-1 cursor-pointer ${
+            className={`px-2 bg-white rounded-sm text-xs shadow-sm py-1 cursor-pointer ${
               currentPage - 1 < 1 && "hidden"
             }`}
             onClick={() => {
@@ -204,7 +215,7 @@ const AdminProducts = () => {
             {currentPage - 1}
           </div>
           <div
-            className="px-2 bg-black text-white rounded-sm text-xs shadow-sm py-1 cursor-pointer "
+            className="px-2 bg-black text-white rounded-sm text-xs shadow-sm py-1 cursor-pointer"
             onClick={() => {
               setCurrentPage(currentPage);
             }}
@@ -212,7 +223,7 @@ const AdminProducts = () => {
             {currentPage}
           </div>
           <div
-            className={`px-2 bg-white rounded-sm  text-xs shadow-sm py-1 cursor-pointer ${
+            className={`px-2 bg-white rounded-sm text-xs shadow-sm py-1 cursor-pointer ${
               currentPage + 1 > totalPages && "hidden"
             }`}
             onClick={() => {

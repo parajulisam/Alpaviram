@@ -28,7 +28,7 @@ const ProductCard = ({ product }) => {
           <div className="img border border-slate-300">
             <img
               // src={`${apiUrl}${imagePath}`}
-              src={imagePath}
+              src={`http://localhost:3001${imagePath}`}
               alt="no image"
               className="object-fill"
             />
