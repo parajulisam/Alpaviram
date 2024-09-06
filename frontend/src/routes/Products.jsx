@@ -62,7 +62,7 @@ const Products = () => {
         <div className=" flex flex-wrap justify-evenly  px-4 py-2 ">
           {categories.map((category, index) => (
             <Link
-              to={`catBrandFilter/?category=${category.category_id}`}
+              to={`filterByCategory/?category=${category.category_id}`}
               key={index}
             >
               <CategoryCard category={category} key={category.category_id} />

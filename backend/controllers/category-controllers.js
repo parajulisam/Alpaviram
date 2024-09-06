@@ -98,5 +98,28 @@ const updateCategory = async (req, res) => {
     throw new Error("Category could not be updated at this moment. Try Again!");
   }
 };
+const getProductsByCategory = async (req, res) => {
+  try {
+    const categoryId = req.params.categoryId;
 
-export { findAllCategories, createCategory, updateCategory, deleteCategory };
+    // Find category by ID to check if it exists
+    const category = await Category.findByPk(categoryId);
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Fetch products associated with the given category ID
+    const products = await Product.findAll({
+      where: {
+        category_id: categoryId,
+      },
+    });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching products by category", error: err.message });
+  }
+};
+
+export { findAllCategories, createCategory, updateCategory, deleteCategory ,getProductsByCategory};

@@ -31,6 +31,7 @@ import OrderComplete from "./routes/OrderComplete";
 import SearchScreen from "./routes/SearchScreen";
 import FilterScreen from "./routes/FilterScreen";
 import "./index.css";
+import ProductsByCategory from "./routes/ProductsByCategory";
 
 const router = createBrowserRouter([
   {
@@ -45,6 +46,8 @@ const router = createBrowserRouter([
       { path: "/cart", element: <CartPage /> },
       { path: "/search", element: <SearchScreen /> },
       { path: "/catBrandFilter", element: <FilterScreen /> },
+      { path: "/filterByCategory", element: <ProductsByCategory /> },
+
       {
         element: <ProtectedRoutes />,
         children: [
