@@ -1,8 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isAuthenticated: null,
+  isAuthenticated: false, // Initialize to false to avoid null checks
   userInfo: null,
+  userId: null, // Add userId to the state
 };
 
 const authUserSlice = createSlice({
@@ -15,8 +16,12 @@ const authUserSlice = createSlice({
     },
 
     setUserInfo(state, action) {
-      state.userInfo = action.payload.user;
-      state.userInfo.isAdmin = action.payload.isAdmin;
+      const { user, isAdmin } = action.payload;
+      console.log("Setting user info:", user); // Add this log for debugging
+
+      state.userInfo = user;
+      state.userId = user?.user_id || null; // Ensure user_id is set correctly
+      state.userInfo.isAdmin = isAdmin;
     },
   },
 });

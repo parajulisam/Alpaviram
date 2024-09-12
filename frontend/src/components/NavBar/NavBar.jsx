@@ -34,6 +34,9 @@ const NavBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDropdownOpenAdmin, setIsDropdownOpenAdmin] = useState(false);
 
+  // Access token from local storage
+  const accessToken = localStorage.getItem("accessToken");
+
   return (
     <>
       {/* Top Bar */}
@@ -63,17 +66,26 @@ const NavBar = () => {
               </p>
             </button>
             <div className="origin-top-right absolute right-0 w-30 rounded-md shadow-lg bg-[#2C2C2C] text-white py-1 z-50 hidden group-hover:block">
-              <Link to="/catBrandFilter" className="dropdown-item block px-5 py-2 text-sm hover:bg-white hover:text-black">
+              <Link
+                to="/catBrandFilter"
+                className="dropdown-item block px-5 py-2 text-sm hover:bg-white hover:text-black"
+              >
                 Category
               </Link>
-              <Link to="/catBrandFilter" className="dropdown-item block px-5 py-2 text-sm hover:bg-white hover:text-black">
+              <Link
+                to="/catBrandFilter"
+                className="dropdown-item block px-5 py-2 text-sm hover:bg-white hover:text-black"
+              >
                 Brand
               </Link>
             </div>
           </div>
 
           {/* Search Bar */}
-          <form onSubmit={searchSubmitHandler} className="search flex relative items-center h-[35px] w-1/2">
+          <form
+            onSubmit={searchSubmitHandler}
+            className="search flex relative items-center h-[35px] w-1/2"
+          >
             <input
               className="rounded-full px-6 w-full h-full drop-shadow-2xl"
               type="text"
@@ -86,14 +98,16 @@ const NavBar = () => {
 
           {/* Buttons */}
           <div className="right flex items-center mx-4 space-x-3">
-            <Link to="/cart" className="flex relative">
-              <PiShoppingCartFill className="size-6" />
-              {totalQuantity > 0 && (
-                <span className="flex items-center justify-center absolute -top-2 -right-2 h-4 w-4 bg-red-500 text-white text-xs rounded-full">
-                  {totalQuantity}
-                </span>
-              )}
-            </Link>
+            {!userInfo || userInfo.role !== 1 ? (
+              <Link to="/cart" className="flex relative">
+                <PiShoppingCartFill className="size-6" />
+                {totalQuantity > 0 && (
+                  <span className="flex items-center justify-center absolute -top-2 -right-2 h-4 w-4 bg-red-500 text-white text-xs rounded-full">
+                    {totalQuantity}
+                  </span>
+                )}
+              </Link>
+            ) : null}
 
             <Link to="/login">
               <PiUserBold className="mx-2 size-5 md:hidden" />
@@ -105,22 +119,40 @@ const NavBar = () => {
                   Admin
                 </button>
                 <div className="origin-top-right absolute right-0 w-30 rounded-md shadow-lg bg-[#2C2C2C] text-white py-1 z-50 hidden group-hover:block">
-                  <Link to="/admin/dashboard" className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/admin/dashboard"
+                    className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Dashboard
                   </Link>
-                  <Link to="/admin/users" className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/admin/users"
+                    className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Users
                   </Link>
-                  <Link to="/admin/products" className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/admin/products"
+                    className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Products
                   </Link>
-                  <Link to="/admin/category" className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/admin/category"
+                    className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Category
                   </Link>
-                  <Link to="/admin/brands" className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/admin/brands"
+                    className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Brand
                   </Link>
-                  <Link to="/admin/orders" className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/admin/orders"
+                    className="dropdown-item block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Orders
                   </Link>
                 </div>
@@ -133,10 +165,16 @@ const NavBar = () => {
                   My Account
                 </button>
                 <div className="dropdown-menu absolute w-24 right-0 bg-[#2C2C2C] text-white rounded-md py-1 z-50 hidden group-hover:block">
-                  <Link to="/userProfile/dashboard" className="block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <Link
+                    to="/userProfile/dashboard"
+                    className="block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Profile
                   </Link>
-                  <button onClick={() => dispatch(logout())} className="block px-4 py-2 text-sm hover:bg-white hover:text-black">
+                  <button
+                    onClick={() => dispatch(logout())}
+                    className="block px-4 py-2 text-sm hover:bg-white hover:text-black"
+                  >
                     Logout
                   </button>
                 </div>

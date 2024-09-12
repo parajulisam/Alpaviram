@@ -4,11 +4,9 @@ const User = db.user;
 
 const authAdmin = async (req, res, next) => {
   try {
-    const user = await User.findOne({ where: { user_id: req.user.id } });
-
-    // @ NOTE: 0 = user, 1 = admin
+    const user = await User.findByPk(req.user.id);
     if (user.role !== 1)
-      return res.status(500).json({ msg: "Admin resources access denied!" });
+      return res.status(403).json({ msg: "Admin resources access denied!" });
 
     next();
   } catch (err) {

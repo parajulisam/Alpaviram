@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
-import { config } from "localforage";
 import { useNavigate } from "react-router-dom";
 
 export default function useProduct() {
-  //   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -37,6 +34,7 @@ export default function useProduct() {
 
   const getImagePath = async (file) => {
     if (imagePath !== "" && imagePath !== oldImagePath) {
+      console.log("Deleting old image path:", imagePath);
       await axios.post(
         "http://localhost:3001/api/v1/uploads/delete",
         { imagePath: imagePath },
@@ -47,6 +45,7 @@ export default function useProduct() {
         }
       );
     }
+    console.log("Uploading new image:", file);
     const { data } = await axios.post(
       "http://localhost:3001/api/v1/uploads",
       { image: file },
@@ -63,7 +62,7 @@ export default function useProduct() {
     let updatedFormData = {};
     if (event.target.name === "image") {
       const files = event.target.files;
-
+      console.log("Image file selected:", files[0]);
       updatedFormData = {
         ...formData,
         imagePath: await getImagePath(files[0]),
@@ -79,36 +78,44 @@ export default function useProduct() {
         [event.target.name]: event.target.value,
       };
     }
+    console.log("Updated form data:", updatedFormData);
     setFormData(updatedFormData);
   };
 
-  const { token } = useSelector((state) => state.token);
+  // Access token from localStorage
+  const token = localStorage.getItem("accessToken");
+  console.log(token);
   const addProduct = async (formData) => {
+    console.log("Adding product with data:", formData);
     const { data } = await axios.post(
       "http://localhost:3001/api/v1/products",
       formData,
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Token from localStorage
         },
         withCredentials: true,
       }
     );
     return data;
   };
+
   const updateProduct = async (formData, id) => {
+    console.log("Updating product with id:", id, "and data:", formData);
     const { data } = await axios.put(
       `http://localhost:3001/api/v1/products/${id}`,
       formData,
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Token from localStorage
         },
         withCredentials: true,
       }
     );
+
+    console.log("Deleting old image path:", oldImagePath);
     await axios.post(
       "http://localhost:3001/api/v1/uploads/delete",
       { imagePath: oldImagePath },
@@ -121,17 +128,20 @@ export default function useProduct() {
 
     return data;
   };
+
   const onSubmit = async (event, id) => {
     event.preventDefault();
     try {
       let response;
       if (id) {
+        console.log("Submitting update for product id:", id);
         response = await updateProduct(formData, id);
         toast.success("Product updated successfully", {
           position: "top-right",
           style: { backgroundColor: "black", color: "white" },
         });
       } else {
+        console.log("Submitting new product");
         response = await addProduct(formData);
         toast.success("Product added successfully", {
           position: "top-right",
@@ -140,7 +150,8 @@ export default function useProduct() {
       }
       return true;
     } catch (error) {
-      toast.error(error.response);
+      console.error("Error occurred:", error);
+      toast.error(error.response?.data || "An error occurred");
       return false;
     }
   };

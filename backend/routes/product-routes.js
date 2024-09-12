@@ -10,6 +10,7 @@ import {
   updateProduct,
   createProductReview,
   getSearchedProducts,
+  getFilteredProducts,
 } from "../controllers/product-controllers.js";
 const router = express.Router();
 
@@ -29,5 +30,5 @@ router.get("/", findAllProducts);
 router.post("/", auth, authAdmin, createProduct);
 router.delete("/:id", auth, authAdmin, deleteProduct);
 router.put("/:id", auth, authAdmin, updateProduct);
-
+router.get("/get/filter", getFilteredProducts);
 export default router;

@@ -62,7 +62,6 @@ const getOrderByID = async (req, res) => {
     });
   }
 };
-
 // @desc    Get logged in user orders
 // @route   GET /api/v1/orders/myorders
 // @access  Private
@@ -118,9 +117,20 @@ const createOrder = async (req, res) => {
       email,
     } = shippingAddress;
 
-    console.log("Shippin address : ", shippingAddress);
+    console.log("Request Body:", req.body);
+    console.log("Shipping Address:", shippingAddress);
 
-    // First create new shipping address
+    // Ensure the user ID is available and valid
+    const userId = req.user?.id; // Adjusted to use `user_id`
+    console.log(userId);
+    if (!userId) {
+      console.error("User ID is not provided.");
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    console.log("User ID:", userId);
+
+    // Create new shipping address
     const newShippingAddress = {
       city,
       postal_code: postalCode,
@@ -131,57 +141,64 @@ const createOrder = async (req, res) => {
       contact_number: contact,
       email,
     };
+    console.log("New Shipping Address Data:", newShippingAddress);
+
     const createdShippingAddress = await ShippingAddress.create(
       newShippingAddress
     );
+    console.log("Created Shipping Address:", createdShippingAddress);
 
-    const userId = req.user.id;
     // Create Order
     const newOrder = {
       total_amount,
       is_paid: 0,
       is_delivered: 0,
-      user_id: userId,
+      user_id: userId, // Ensure `user_id` is correctly assigned here
       shipping_address_id: createdShippingAddress.shipping_address_id,
       status: "Payment Pending",
     };
-    const createdOrder = await Order.create(newOrder);
+    console.log("New Order Data:", newOrder);
 
-    // Order Line
-    const newOrderItems = orderItems.map((item) => {
-      return {
-        order_id: createdOrder.order_id,
-        product_id: item.product_id,
-        name: item.name,
-        price: item.price,
-        quantity: item.qty,
-        line_total: item.qty * item.price,
-      };
-    });
+    const createdOrder = await Order.create(newOrder);
+    console.log("Created Order:", createdOrder);
+
+    // Create Order Lines
+    const newOrderItems = orderItems.map((item) => ({
+      order_id: createdOrder.order_id,
+      product_id: item.product_id,
+      name: item.name,
+      price: item.price,
+      quantity: item.qty,
+      line_total: item.qty * item.price,
+    }));
+
+    console.log("New Order Items Data:", newOrderItems);
 
     await OrderLine.bulkCreate(newOrderItems);
+    console.log("Order Lines Created");
 
-    // Updating stock
+    // Update stock for each product
     for (const item of newOrderItems) {
       const product = await Product.findOne({
-        where: {
-          product_id: item.product_id,
-        },
+        where: { product_id: item.product_id },
       });
 
       if (product) {
         product.countInStock -= item.quantity;
-
         await product.save();
+        console.log(
+          `Updated stock for product ${item.product_id}:`,
+          product.countInStock
+        );
+      } else {
+        console.warn(`Product not found: ${item.product_id}`);
       }
     }
 
     res.status(201).json(createdOrder);
   } catch (error) {
-    // Log the error or handle it as needed
+    // Log the error and send a proper HTTP response with a status code and error message
     console.error("Order creation failed:", error);
-
-    // Send a proper HTTP response with a status code and error message
     res
       .status(500)
       .json({ message: "Order creation failed. Please try again later." });
@@ -193,21 +210,38 @@ const createOrder = async (req, res) => {
 // @access  Private
 const updatePayment = async (req, res) => {
   const orderId = req.params.id;
-  const { payment_method, is_paid } = req.body;
-  const order = await Order.findByPk(orderId);
+  const { payment_method, payment_id, amount } = req.body;
 
-  if (order) {
-    order.payment_method = payment_method;
-    order.is_paid = is_paid ? is_paid : order.is_paid;
-    order.paid_at = is_paid ? Date.now() : order.paid_at;
-    order.status = "Order Completed";
+  console.log("Received request to update payment for order ID:", orderId);
+  console.log("Request body:", req.body);
 
-    const updatedOrder = await order.save();
+  try {
+    // Find the order by its ID
+    const order = await Order.findByPk(orderId);
 
-    res.json(updatedOrder);
-  } else {
-    res.status(404);
-    throw new Error("Order not found!");
+    if (order) {
+      console.log("Found order:", order);
+
+      // Update the fields
+      order.payment_method = payment_method || order.payment_method; // Update payment method if provided
+      order.is_paid = 1; // Mark the order as paid
+      order.paid_at = new Date(); // Set the payment date to now
+      order.status = "Order Completed"; // Update status to "Order Completed"
+
+      // Save the updated order
+      const updatedOrder = await order.save();
+
+      console.log("Updated order:", updatedOrder);
+      res.json(updatedOrder); // Send back the updated order
+    } else {
+      console.error("Order not found for ID:", orderId);
+      res.status(404).json({ message: "Order not found!" });
+    }
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    res
+      .status(500)
+      .json({ message: `Failed to update payment status: ${error.message}` }); // Include error message
   }
 };
 
@@ -271,8 +305,13 @@ const cancelOrder = async (req, res) => {
 // @desc    Get all orders
 // @route   PUT /api/orders
 // @access  Private
+
 const getOrders = async (req, res) => {
+  console.log("getOrders function started"); // Log when function starts
+
   try {
+    console.log("Fetching orders from database...");
+
     const orders = await Order.findAll({
       attributes: {
         exclude: ["shipping_address_id"],
@@ -292,8 +331,11 @@ const getOrders = async (req, res) => {
       ],
     });
 
+    console.log("Orders fetched successfully:", orders); // Log the fetched orders
+
     res.json(orders);
   } catch (error) {
+    console.error("Error fetching orders:", error); // Log any errors
     res.status(500).json({ error: "Orders could not be fetched!" });
   }
 };

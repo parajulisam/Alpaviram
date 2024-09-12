@@ -12,6 +12,7 @@ import {
   resetPassword,
   getAccessToken,
   updateUserDetails,
+  deleteUser,
 } from "../controllers/user-controllers.js";
 import auth from "../middlewares/auth.js";
 import authAdmin from "../middlewares/authAdmin.js";
@@ -33,4 +34,5 @@ router.post("/resetPassword", auth, resetPassword);
 
 //admin routes
 router.get("/getAllUsersInfo", auth, authAdmin, getAllUsersInfo);
+router.delete("/:id", authAdmin, deleteUser);
 export default router;

@@ -1,76 +1,86 @@
 import React from "react";
-import monitor from "../../assets/4kMonitor.jpg";
-import Rating from "./Rating";
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../features/cart/cart-action";
-// import { addProduct } from "../../features/cart-slice";
-
+import Rating from "./Rating";
+import { toast } from "react-toastify";
 export const apiUrl = import.meta.env.VITE_URL;
+
 const ProductCard = ({ product }) => {
-  // console.log(apiUrl);
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.authUser); // Access authentication state
+
   const { product_id, name, imagePath, price, countInStock, numReviews } =
     product;
-  // console.log(imagePath);
-
   const qty = 1;
+
   const addToCartHandler = () => {
-    dispatch(
-      addToCart({ product_id, name, imagePath, price, countInStock, qty })
-    );
+    if (countInStock === 0) {
+      toast.error("This product is out of stock.", {
+        position: "top-right",
+        style: { backgroundColor: "black", color: "white" },
+      });
+    } else if (!isAuthenticated) {
+      toast.error("Please log in to add items to the cart.", {
+        position: "top-right",
+        style: { backgroundColor: "black", color: "white" },
+      });
+    } else {
+      dispatch(
+        addToCart({ product_id, name, imagePath, price, countInStock, qty })
+      );
+    }
   };
+
   return (
-    <>
-      <div className="card border border-slate-300 shadow-2xl w-64  rounded-sm my-4 bg-[#F0F0F0] hover:scale-105  hover:duration-300 hover:ease-in-out mx-3 ">
-        {/* imagePath */}
+    <div className="card border border-slate-300 shadow-2xl w-64 rounded-sm my-4 bg-[#F0F0F0] hover:scale-105 hover:duration-300 hover:ease-in-out mx-3">
+      {/* imagePath */}
+      <Link to={`/products/${product.product_id}`}>
+        <div className="img border border-slate-300">
+          <img
+            src={`http://localhost:3001${imagePath}`}
+            alt="no image"
+            className="object-fill"
+          />
+        </div>
+      </Link>
+
+      {/* card information */}
+      <div className="px-4 py-2 space-y-2">
+        {/* title */}
         <Link to={`/products/${product.product_id}`}>
-          <div className="img border border-slate-300">
-            <img
-              // src={`${apiUrl}${imagePath}`}
-              src={`http://localhost:3001${imagePath}`}
-              alt="no image"
-              className="object-fill"
-            />
-          </div>
+          <div className="title text-xl tracking-wide">{product.name}</div>
         </Link>
 
-        {/* card informations */}
-
-        <div className="px-4 py-2 space-y-2 ">
-          {/* title */}
-          <Link to={`/products/${product.product_id}`}>
-            <div className="title text-xl  tracking-wide ">{product.name}</div>
-          </Link>
-
-          {/* rating */}
-          <div className="rating ">
-            <Rating
-              text={`${product.numReviews} reviews`}
-              value={product.rating}
-            />
-          </div>
-
-          {/* price */}
-          <div className="price flex  space-x-1  ">
-            <div className="price text-xl  ">NPR {product.price} /-</div>
-          </div>
-          {/* end of price */}
-
-          {/* add to cart button */}
-          <div className="button">
-            <button
-              onClick={addToCartHandler}
-              className="w-full py-2 border border-black rounded-sm hover:bg-neutral-700 hover:ease-linear hover:left- hover:text-white hover:opacity-90 hover:duration-300"
-            >
-              Add to Cart
-            </button>
-          </div>
+        {/* rating */}
+        <div className="rating">
+          <Rating
+            text={`${product.numReviews} reviews`}
+            value={product.rating}
+          />
         </div>
 
-        {/* end of card information */}
+        {/* price */}
+        <div className="price flex space-x-1">
+          <div className="price text-xl">NPR {product.price} /-</div>
+        </div>
+
+        {/* add to cart button */}
+        <div className="button">
+          <button
+            onClick={addToCartHandler}
+            className={`w-full py-2 border border-black rounded-sm ${
+              countInStock === 0
+                ? "cursor-not-allowed opacity-50"
+                : "hover:bg-neutral-700 hover:text-white hover:opacity-90"
+            }`}
+            disabled={countInStock === 0}
+          >
+            {countInStock === 0 ? "Out of Stock" : "Add to Cart"}
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import pg from "pg"
+import pg from "pg";
 
 // export const sequelize = new Sequelize("Alpaviram", "root", "", {
 //   host: "localhost",
@@ -9,10 +9,12 @@ import pg from "pg"
 //   },
 // });
 
-
-export const sequelize = new Sequelize('postgresql://postgres.zggvyibhbndhoultupvl:Alpaviram@527969@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres', {
-  dialectModule: pg
-})
+export const sequelize = new Sequelize(
+  "postgresql://postgres.zggvyibhbndhoultupvl:Alpaviram@527969@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  {
+    dialectModule: pg,
+  }
+);
 
 // const connectdb = async () => {
 //   try {

@@ -1,7 +1,7 @@
-import bycrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../models/index.js";
-import asynchandler from "express-async-handler";
+import asyncHandler from "express-async-handler";
 import { Sequelize } from "sequelize";
 
 const User = db.user;
@@ -10,178 +10,171 @@ const Op = Sequelize.Op;
 // @desc  add new user
 // @route POST api/v1/user/register
 // @access Public
-
-const registerUser = asynchandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, contact, role } = req.body;
 
   try {
-    //checking if the user is already in the database.
-    const alreadyUser = await User.findOne({ where: { email } }).catch(
-      (error) => {
-        console.log("Error : ", error);
-      }
-    );
+    // Checking if the user is already in the database
+    const alreadyUser = await User.findOne({ where: { email } });
 
-    //throw message if user already exists
     if (alreadyUser) {
       res.status(400);
       throw new Error(`User '${email}' already exists!`);
     }
 
-    const hashPassword = bycrypt.hashSync(password, 10);
-    const newUser = new User({
+    const hashPassword = bcrypt.hashSync(password, 10);
+    const newUser = await User.create({
       first_name: firstName,
       last_name: lastName,
-      email: email,
+      email,
       password: hashPassword,
       contact_number: contact,
-      role: role,
-    });
-    //saving the new user in the database
-    const savedUser = await newUser.save().catch((err) => {
-      console.log("Error : ", err);
-      res.status(500);
-      throw new Error("Cannot register user at the moment!");
+      role,
     });
 
-    //throw success message if the user is saved in the database
-    if (savedUser) {
-      res.json({ messgae: "Thanks for registering" });
-    }
+    res.status(201).json({ message: "Thanks for registering", user: newUser });
   } catch (error) {
-    throw new Error(error.message);
+    console.error("Registration error:", error);
+    res.status(500).json({ message: error.message });
   }
 });
 
 // @desc  login user
 // @route POST api/v1/user/login
 // @access Public
-
-const loginUser = asynchandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  //first of all, check user with email exist or not
-  const userWithEmail = await User.findOne({ where: { email } }).catch(
-    (err) => {
-      console.log("Error : ", err);
+  try {
+    // Check if user exists
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      res.status(400);
+      throw new Error(`User '${email}' not found!`);
     }
-  );
 
-  if (!userWithEmail) {
-    // return res.status(404).json({ message: "User not found" });
-    res.status(400);
-    throw new Error(`User '${email}' not found!`);
+    // Check password validity
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+
+    if (!isPasswordValid) {
+      res.status(400);
+      throw new Error("Email or password does not match!");
+    }
+
+    // Create and set refresh token
+    const refreshToken = createRefreshToken({
+      id: user.user_id,
+      role: user.role,
+    });
+    res.cookie("refreshtoken", refreshToken, {
+      httpOnly: true,
+      path: "/api/v1/user/refreshToken",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Create access token
+    const accessToken = createAccessToken({
+      id: user.user_id,
+      role: user.role,
+    });
+
+    const userData = {
+      id: user.user_id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      role: user.role,
+    };
+
+    res.json({
+      message:
+        user.role === 1
+          ? "Welcome to the admin panel"
+          : "Welcome back! Login successful",
+      refreshToken,
+      accessToken,
+      user: userData,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: error.message });
   }
-
-  //now check the password
-  const isPasswordValid = await bycrypt.compare(
-    password,
-    userWithEmail.password
-  );
-
-  if (!isPasswordValid) {
-    res.status(400);
-    throw new Error("Email or password does not match!");
-    // return res.status(401).json({ message: "Email or passwprd is wrong." });
-  }
-
-  const refreshToken = createRefreshToken({ id: userWithEmail.user_id });
-
-  // setting refresh token in the cookie
-  res.cookie("refreshtoken", refreshToken, {
-    httpOnly: true,
-    // path to get refresh token
-    path: "/api/v1/user/refreshToken",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
-
-  //checking if the user is admin
-  //default is 0 which is customer and 1 is for admin
-  if (userWithEmail.role === 1) {
-    return res.json({ message: "Welcome to admin panel", refreshToken });
-  }
-  //message after succesfull login
-  res.json({ message: "Welcome back! Login successful", refreshToken });
 });
 
-// @desc    Get Access Token
-// @route   POST /api/v1/user/refreshToken
-// @access  Public (anything can hit it)
-// to get access token
-// refresh token is set in cookie
-// in every refresh of the page
-// a call is made to get the access token
-// so that the access token can be used
-// to access protected routes
-const getAccessToken = async (req, res) => {
+// @desc  Get Access Token
+// @route POST /api/v1/user/refreshToken
+// @access Public
+const getAccessToken = asyncHandler(async (req, res) => {
   try {
-    // accesssing refresh token from cookie
     const refreshToken = req.cookies.refreshtoken;
-    // if there is no refresh token
     if (!refreshToken)
       return res.status(400).json({ msg: "Please login now!" });
 
-    // if there is refresh token
-    // verify the refresh token
-    // user = {id: someValue}
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
       if (err) return res.status(400).json({ msg: "Please login now!" });
 
-      // create access token
-      const accessToken = createAccessToken({ id: user.id });
-
-      // Sending access token as response
+      const accessToken = createAccessToken({ id: user.id, role: user.role });
       res.json({ accessToken });
     });
   } catch (error) {
-    res.status(500);
-    throw new Error(error.message);
+    res.status(500).json({ msg: error.message });
   }
-};
+});
 
 // @desc  logout user / clear cookie
-// @route get api/v1/user/logout
+// @route GET api/v1/user/logout
 // @access PRIVATE
-
-const logout = async (req, res) => {
+const logout = asyncHandler(async (req, res) => {
   try {
     res.clearCookie("refreshtoken", { path: "/api/v1/user/refreshToken" });
-    return res.json({ msg: "Logged out!" });
-  } catch (err) {
-    res.status(500);
-    throw new Error(err.message);
+    res.json({ msg: "Logged out!" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-};
+});
 // @desc  get user profile
 // @route GET api/v1/user/userProfile
 // @access PRIVATE
-
 const getUserProfile = async (req, res) => {
-  //displays the user profile according to the token with whom it is attached
   try {
+    // Log the user ID from the token
+    // console.log("User ID from token:", req.user.id);
+
+    // Fetch the user profile from the database
     const user = await User.findByPk(req.user.id, {
       attributes: {
         exclude: ["password"],
       },
     });
 
+    // Log the fetched user data
+    // console.log("Fetched User Profile:", user);
+
+    // If user is not found, log and return a 404 status
+    if (!user) {
+      // console.log("User not found");
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    // Send the user profile as the response
     res.json(user);
   } catch (err) {
-    res.status(500);
-    throw new Error(err.message);
+    // Log the error
+    console.error("Error fetching user profile:", err.message);
+
+    // Send a 500 status and error message
+    res.status(500).json({ msg: "Internal server error" });
   }
 };
 
-// @desc    To get all users info
-// @route   POST /api/v1/user/allUsersInfo
-// @access  Protected (auth + admin)
-const getAllUsersInfo = async (req, res) => {
+// @desc  To get all users info
+// @route POST /api/v1/user/allUsersInfo
+// @access Protected (auth + admin)
+const getAllUsersInfo = asyncHandler(async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: {
-        exclude: ["password"],
-      },
-
+      attributes: { exclude: ["password"] },
       where: {
         user_id: {
           [Op.ne]: req.user.id,
@@ -190,111 +183,87 @@ const getAllUsersInfo = async (req, res) => {
     });
 
     res.json(users);
-  } catch (err) {
-    res.status(500);
-    throw new Error(err.message);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
   }
-};
+});
 
 // @desc  forget password
 // @route POST api/v1/user/forgotPassword
 // @access PUBLIC
-
-const forgotPassword = async (req, res) => {
+const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  //extracting the user from the provided email
-  const user = await User.findOne({ where: { email } }).catch((err) =>
-    console.log("Error :", err)
-  );
+  try {
+    const user = await User.findOne({ where: { email } });
 
-  // if user does not exist with the email
-  if (!user) {
-    res.status(400);
-    throw new Error("This email does not exist!");
+    if (!user) {
+      return res.status(400).json({ msg: "This email does not exist!" });
+    }
+
+    const accessToken = createAccessToken({
+      id: user.user_id,
+      email: user.email,
+    });
+    const url = `http://localhost:3000/api/v1/user/reset/${accessToken}`;
+
+    res.json({
+      message: "Password reset email sent. Please check your email to reset.",
+    });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
   }
-
-  // if user exist
-
-  const accessToken = createAccessToken({ id: user.id, email: user.email });
-
-  // frontend link to enter a new password
-  const url = `http://localhost:3000/api/v1/user/reset/${accessToken}`;
-
-  // console.log(url);
-  res.json({
-    message:
-      "Password reset email sent to your mail. Please check your mail to reset.",
-  });
-};
+});
 
 // @desc  reset password
-// @route POST api/v1/user/resetPassowrd
+// @route POST api/v1/user/resetPassword
 // @access PUBLIC
+const resetPassword = asyncHandler(async (req, res) => {
+  const { password } = req.body;
 
-const resetPassword = async (req, res) => {
   try {
-    const { password } = req.body;
-    // console.log(password);
-
-    const passwordHash = await bycrypt.hash(password, 10);
-
+    const passwordHash = bcrypt.hashSync(password, 10);
     await User.update(
-      {
-        password: passwordHash,
-      },
-      { where: { id: req.user.id } }
+      { password: passwordHash },
+      { where: { user_id: req.user.id } }
     );
 
     res.json({ message: "Password successfully changed!" });
-  } catch (err) {
-    res.status(500);
-    throw new Error(err.message);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
   }
-};
+});
 
 // @desc  update password
 // @route PUT api/v1/user/updatePassword
 // @access PRIVATE
-
-const updatePassword = async (req, res) => {
+const updatePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   try {
-    // finding user
     const user = await User.findByPk(req.user.id);
+    const isPasswordValid = bcrypt.compareSync(currentPassword, user.password);
 
-    // comparing the password
-    const isPasswordValid = await bycrypt.compare(
-      currentPassword,
-      user.password
-    );
-
-    // checkiing if the old password matches
     if (!isPasswordValid) {
-      res.status(400);
-      throw new Error("Current password does not match!");
+      return res
+        .status(400)
+        .json({ message: "Current password does not match!" });
     }
 
-    //hashing the new password
-    const newHashPassword = bycrypt.hashSync(newPassword, 10);
-
-    //updating the password
+    const newHashPassword = bcrypt.hashSync(newPassword, 10);
     user.password = newHashPassword;
-
     await user.save();
 
     res.json({ message: "Password Updated Successfully!" });
   } catch (error) {
-    res.status(500);
-    throw new Error(error.message);
+    res.status(500).json({ msg: error.message });
   }
-};
+});
 
-// @desc    To reset password
-// @route   POST /api/v1/user/reset
-// @access  Public (anything can hit it)
-const updateUserDetails = async (req, res) => {
+// @desc  update user details
+// @route PUT /api/v1/user/update
+// @access PRIVATE
+const updateUserDetails = asyncHandler(async (req, res) => {
   try {
     const { firstName, lastName, contactNumber } = req.body;
 
@@ -309,27 +278,51 @@ const updateUserDetails = async (req, res) => {
     }
 
     res.json({ message: "User details updated successfully" });
-  } catch (err) {
-    res.status(500);
-    throw new Error(
-      "User details could not be updated at this moment. Try again!"
-    );
+  } catch (error) {
+    res
+      .status(500)
+      .json({ msg: "User details could not be updated. Try again!" });
   }
-};
+});
 
-// access tokken for forget password
-// expires in 15m
+// @desc  delete user
+// @route DELETE /api/v1/user/:id
+// @access PRIVATE (admin only)
+const deleteUser = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.destroy({ where: { user_id: id } });
+
+    if (user) {
+      return res.status(200).json({ message: "User deleted successfully" });
+    } else {
+      return res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Utility functions to create tokens
 const createAccessToken = (payload) => {
-  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m",
-  });
+  return jwt.sign(
+    { id: payload.id, role: payload.role }, // Include role in the payload
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "15m" }
+  );
 };
 
 const createRefreshToken = (payload) => {
-  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "7d",
-  });
+  return jwt.sign(
+    { id: payload.id, role: payload.role }, // Include role in the payload
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: "7d" }
+  );
 };
 
 export {
@@ -343,4 +336,5 @@ export {
   getAccessToken,
   resetPassword,
   updatePassword,
+  deleteUser,
 };

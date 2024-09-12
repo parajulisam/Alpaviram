@@ -102,10 +102,15 @@ const getProductsByCategory = async (req, res) => {
   try {
     const categoryId = req.params.categoryId;
 
+    // Log the received categoryId
+    console.log(`Category ID: ${categoryId}`);
+
     // Find category by ID to check if it exists
     const category = await Category.findByPk(categoryId);
 
+    // Log whether the category was found or not
     if (!category) {
+      console.log("Category not found");
       return res.status(404).json({ message: "Category not found" });
     }
 
@@ -116,10 +121,26 @@ const getProductsByCategory = async (req, res) => {
       },
     });
 
+    // Log the number of products found
+    console.log(
+      `Found ${products.length} product(s) in category ID ${categoryId}`
+    );
+
     res.json(products);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching products by category", error: err.message });
+    // Log any error that occurs during the process
+    console.error("Error fetching products by category:", err.message);
+    res.status(500).json({
+      message: "Error fetching products by category",
+      error: err.message,
+    });
   }
 };
 
-export { findAllCategories, createCategory, updateCategory, deleteCategory ,getProductsByCategory};
+export {
+  findAllCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getProductsByCategory,
+};

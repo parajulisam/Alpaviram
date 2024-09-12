@@ -11,7 +11,7 @@ import authAdmin from "../middlewares/authAdmin.js";
 const router = express.Router();
 
 router.route("/").get(findAllCategories);
-router.get("category/:categoryId",getProductsByCategory)
+router.get("/category/:categoryId", getProductsByCategory);
 // router.get("/", getProducts);
 // router.get("/category/:id", getProductsByCategory);
 

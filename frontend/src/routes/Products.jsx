@@ -61,10 +61,7 @@ const Products = () => {
         {/* category list */}
         <div className=" flex flex-wrap justify-evenly  px-4 py-2 ">
           {categories.map((category, index) => (
-            <Link
-              to={`filterByCategory/?category=${category.category_id}`}
-              key={index}
-            >
+            <Link to={`filterByCategory/${category.category_id}`} key={index}>
               <CategoryCard category={category} key={category.category_id} />
             </Link>
           ))}

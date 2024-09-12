@@ -178,24 +178,35 @@ const updateProduct = async (req, res) => {
       featured,
     } = req.body;
 
+    // Log the incoming request body
+    console.log("Request body:", req.body);
+
+    // Find the product by ID
     const product = await Product.findByPk(req.params.id);
 
+    // Log the product before updating
+    console.log("Product before update:", product);
+
     if (!product) {
-      res.status(404);
-      throw new Error("Product could not found!");
+      res.status(404).json({ error: "Product could not be found!" });
+      return;
     }
 
-    if (product) {
-      product.name = name;
-      product.description = description;
-      product.price = price;
-      (product.imagePath = imagePath), (product.countInStock = countInStock);
-      product.category_id = category_id;
-      product.brand_id = brand_id;
-      product.featured = featured;
-    }
+    // Update only the fields that are present in the request body
+    if (name !== undefined) product.name = name;
+    if (description !== undefined) product.description = description;
+    if (price !== undefined) product.price = price;
+    if (imagePath !== undefined) product.imagePath = imagePath;
+    if (countInStock !== undefined) product.countInStock = countInStock;
+    if (category_id !== undefined) product.category_id = category_id;
+    if (brand_id !== undefined) product.brand_id = brand_id;
+    if (featured !== undefined) product.featured = parseInt(featured, 10); // Ensure this is an integer
 
+    // Save the updated product
     const editedProduct = await product.save();
+
+    // Log the product after saving
+    console.log("Product after saving:", editedProduct);
 
     // Adding category info
     const updatedProduct = await Product.findByPk(editedProduct.product_id, {
@@ -206,7 +217,6 @@ const updateProduct = async (req, res) => {
         "price",
         "imagePath",
         "countInStock",
-        "user_id",
         "category_id",
         "brand_id",
         "featured",
@@ -217,25 +227,27 @@ const updateProduct = async (req, res) => {
         {
           model: Category,
           as: "category",
-          attributes: [],
+          attributes: [], // Ensure correct model association
         },
         {
-          model: Brand, // Include the Brand model in the query
-          as: "brand", // Make sure the alias matches the one defined in your model associations
-          attributes: [],
+          model: Brand,
+          as: "brand",
+          attributes: [], // Ensure correct model association
         },
       ],
     });
 
-    res
-      .json({
-        message: "Product updated successfully",
-        updatedProduct,
-      })
-      .status(200);
+    // Send response
+    res.status(200).json({
+      message: "Product updated successfully",
+      updatedProduct,
+    });
   } catch (err) {
-    res.status(500);
-    throw new Error(err.message);
+    // Log the error
+    console.error("Error updating product:", err.message);
+
+    // Send error response
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -244,7 +256,7 @@ const updateProduct = async (req, res) => {
 // @access  Protected/Admin
 const findAllProducts = async (req, res) => {
   try {
-    const products = await Product.findAll()
+    const products = await Product.findAll();
     // const products = await Product.findAll({
     //   attributes: { exclude: ["category_id", "brand_id"] },
     //   include: [
@@ -322,6 +334,46 @@ const getSearchedProducts = async (req, res) => {
 
   res.json({ matchedProducts });
 };
+const getFilteredProducts = async (req, res) => {
+  const { category_id, brand_id, rating, price } = req.query;
+  let query = {};
+
+  // Category filter
+  if (category_id && category_id !== "0") {
+    query["category_id"] = parseInt(category_id);
+  }
+
+  // Brand filter
+  if (brand_id && brand_id !== "0") {
+    query["brand_id"] = parseInt(brand_id);
+  }
+
+  // Rating filter
+  if (rating && rating !== "6") {
+    // '6' as a placeholder for "Any Rating"
+    query["rating"] = parseFloat(rating);
+  }
+
+  // Price price filter
+  if (price && price !== "0") {
+    const [min, max] = price.split("-").map(Number);
+    query["price"] = { [Op.gte]: min, [Op.lte]: max };
+  }
+
+  // Log the constructed query object
+  console.log("Constructed Query: ", query);
+
+  try {
+    const products = await Product.findAll({ where: query }); // Use Sequelize's findAll method
+    console.log("Products Found: ", products); // Log the found products
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching products: ", error); // Log the error details
+    res
+      .status(500)
+      .json({ message: "Error fetching products", error: error.message });
+  }
+};
 
 export {
   findProductById,
@@ -332,4 +384,5 @@ export {
   updateProduct,
   deleteProduct,
   createProductReview,
+  getFilteredProducts,
 };

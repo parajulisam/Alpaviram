@@ -25,9 +25,6 @@ const cartSlice = createSlice({
 
     addItemToCart(state, action) {
       const addedItem = action.payload;
-
-      // checking if item already exists
-      // set in the console if necessary
       const existsItem = state.cartItems.find(
         (item) => item.product_id === addedItem.product_id
       );
@@ -45,23 +42,16 @@ const cartSlice = createSlice({
 
     removeItemFromCart(state, action) {
       const productId = action.payload;
-
       state.cartItems = state.cartItems.filter(
         (item) => item.product_id !== productId
       );
-
       cartSlice.caseReducers.calculateQtyAndTotal(state);
     },
 
-    // In the beginning
     replaceCart(state, action) {
       const cartItems = action.payload;
-
-      // products state
       state.cartItems = cartItems;
-      // total quantity calculation
       state.totalQuantity = cartItems.reduce((acc, item) => acc + item.qty, 0);
-
       state.total = cartItems.reduce(
         (acc, item) => acc + item.price * item.qty,
         0

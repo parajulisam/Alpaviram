@@ -9,14 +9,14 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
   const [brands, setBrands] = useState([]);
 
   const {
-    name,
-    price,
-    description,
-    countInStock,
-    category_id,
-    brand_id,
-    featured,
-    imagePath,
+    name = "",
+    price = "",
+    description = "",
+    countInStock = "",
+    category_id = "",
+    brand_id = "",
+    featured = false,
+    imagePath = "",
     onSubmit,
     handleChange,
     setFormData,
@@ -26,32 +26,83 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const { data } = await axios.get(
-        "http://localhost:3001/api/v1/categories"
-      );
-      setCategories(data);
+      try {
+        const { data: categoryData } = await axios.get(
+          "http://localhost:3001/api/v1/categories"
+        );
+        console.log("Fetched categories:", categoryData);
+        setCategories(categoryData);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
     };
+
     const fetchBrands = async () => {
-      const { data } = await axios.get("http://localhost:3001/api/v1/brands");
-      setBrands(data);
+      try {
+        const { data: brandData } = await axios.get(
+          "http://localhost:3001/api/v1/brands"
+        );
+        console.log("Fetched brands:", brandData);
+        setBrands(brandData);
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+      }
     };
+
     fetchCategories();
     fetchBrands();
+
     if (data && !isAdd) {
+      console.log("Setting form data for update:", data);
       setFormData({
-        name: data.name,
-        price: data.price,
-        description: data.description,
-        imagePath: data.imagePath,
-        countInStock: data.countInStock,
-        category_id: data.category.category_id,
-        brand_id: data.brand.brand_id,
-        featured: data.featured,
+        name: data.name || "",
+        price: data.price || "",
+        description: data.description || "",
+        imagePath: data.imagePath || "",
+        countInStock: data.countInStock || "",
+        category_id: data.category ? data.category.category_id : "",
+        brand_id: data.brand ? data.brand.brand_id : "",
+        featured: data.featured || false,
       });
-      setOldImagePath(data.imagePath);
+      setOldImagePath(data.imagePath || "");
       setUpdate(true);
     }
-  }, []);
+  }, [data, isAdd, setFormData, setOldImagePath, setUpdate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Convert featured to integer for submission
+    const submitFeatured = featured ? 1 : 0;
+
+    console.log("Form data before submit:", {
+      name,
+      price,
+      description,
+      countInStock,
+      category_id,
+      brand_id,
+      featured: submitFeatured,
+    });
+
+    let response = false;
+    try {
+      if (data && !isAdd) {
+        response = await onSubmit(e, data.product_id);
+      } else {
+        response = await onSubmit(e);
+      }
+      console.log("Submit response:", response);
+    } catch (error) {
+      console.error("Error during form submission:", error);
+    }
+
+    if (response) {
+      const timer = setTimeout(() => {
+        closeHandler();
+      }, 500);
+    }
+  };
 
   return (
     <>
@@ -61,33 +112,15 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
       >
         <div
           className="bg-white w-full px-3 md:p-10 py-5 md:min-w-[800px] md:max-w-[900px] md:min-h-[400px] shadow-xl rounded-lg m-3 max-h-[95vh] overflow-y-scroll pb-20 lg:pb-5"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="py-3  pb-8 flex justify-between items-center">
-            <h2 className="text-xl font-bold ">
+          <div className="py-3 pb-8 flex justify-between items-center">
+            <h2 className="text-xl font-bold">
               {isAdd ? "Add" : "Update"} Product
             </h2>
             <IoClose className="size-8 cursor-pointer" onClick={closeHandler} />
           </div>
-          <form
-            encType="multipart/form-data"
-            onSubmit={(e) => {
-              let response = false;
-              if (data && !isAdd) {
-                e.preventDefault();
-                response = onSubmit(e, data.product_id);
-              } else {
-                response = onSubmit(e);
-              }
-              if (response) {
-                const timer = setTimeout(() => {
-                  closeHandler();
-                }, 500);
-              }
-            }}
-          >
+          <form encType="multipart/form-data" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 gap-y-0">
               <div className="flex flex-col gap-1 py-2">
                 <label htmlFor="name" className="text-sm text-gray-600">
@@ -96,145 +129,105 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
                 <input
                   required
                   name="name"
-                  value={name ?? ""}
+                  value={name}
                   onChange={handleChange}
                   title="name"
                   type="text"
                   placeholder="Iphone 15 pro max"
-                  className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300`}
-                  // className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm ${
-                  //   fullNameError !== ""
-                  //     ? " border-red-500"
-                  //     : "border-slate-300"
-                  // }`}
+                  className="border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300"
                 />
-                {/* {nameError !== "" && (
-                  <p className="pb-2 text-red-500 text-sm">{nameError}</p>
-                )} */}
               </div>
               <div className="flex flex-col gap-1 py-2">
-                <label htmlFor="name" className="text-sm text-gray-600">
+                <label htmlFor="price" className="text-sm text-gray-600">
                   Price *
                 </label>
                 <input
                   required
-                  value={price ?? 0}
+                  value={price}
                   onChange={handleChange}
                   min={10}
                   name="price"
                   title="price"
                   type="number"
                   placeholder="1000"
-                  className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300`}
-                  // className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm ${
-                  //   usernameError !== ""
-                  //     ? " border-red-500"
-                  //     : "border-slate-300"
-                  // }`}
+                  className="border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300"
                 />
-                {/* {priceError !== "" && (
-                    <p className="pb-2 text-red-500 text-sm">{priceError}</p>
-                  )} */}
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 gap-y-0">
               <div className="flex flex-col gap-1 py-2">
-                <label htmlFor="name" className="text-sm text-gray-600">
+                <label htmlFor="countInStock" className="text-sm text-gray-600">
                   Count in stock *
                 </label>
                 <input
                   required
-                  value={countInStock ?? 0}
+                  value={countInStock}
                   onChange={handleChange}
                   name="countInStock"
                   title="countInStock"
                   type="number"
                   min={0}
                   placeholder="0"
-                  className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300`}
-                  // className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm ${
-                  //   fullNameError !== ""
-                  //     ? " border-red-500"
-                  //     : "border-slate-300"
-                  // }`}
+                  className="border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300"
                 />
-                {/* {countInStockError !== "" && (
-                  <p className="pb-2 text-red-500 text-sm">{countInStockError}</p>
-                )} */}
               </div>
               <div className="flex flex-col gap-1 py-2">
-                <label htmlFor="name" className="text-sm text-gray-600">
+                <label htmlFor="category_id" className="text-sm text-gray-600">
                   Category *
                 </label>
                 <select
                   required
-                  value={category_id ?? categories[0].category_id}
+                  value={category_id}
                   onChange={handleChange}
                   name="category_id"
                   title="category_id"
-                  className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300`}
-                  // className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm ${
-                  //   roleIdError !== "" ? " border-red-500" : "border-slate-300"
-                  // }`}
+                  className="border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300"
                 >
                   <option value="">Choose Category</option>
-                  {categories.map((category) => {
-                    return (
-                      <option
-                        value={category.category_id}
-                        key={category.category_id}
-                      >
-                        {category.name}
-                      </option>
-                    );
-                  })}
+                  {categories.map((category) => (
+                    <option
+                      value={category.category_id}
+                      key={category.category_id}
+                    >
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
-                {/* {priceError !== "" && (
-                    <p className="pb-2 text-red-500 text-sm">{priceError}</p>
-                  )} */}
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 gap-y-0">
               <div className="flex flex-col gap-1 py-2">
-                <label htmlFor="name" className="text-sm text-gray-600">
+                <label htmlFor="brand_id" className="text-sm text-gray-600">
                   Brand *
                 </label>
                 <select
                   required
                   name="brand_id"
-                  value={brand_id ?? brands[0].brand_id}
+                  value={brand_id}
                   onChange={handleChange}
                   title="brand_id"
-                  className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300`}
-                  // className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm ${
-                  //   roleIdError !== "" ? " border-red-500" : "border-slate-300"
-                  // }`}
+                  className="border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300"
                 >
                   <option value="">Choose brand</option>
-                  {brands.map((brand) => {
-                    return (
-                      <option value={brand.brand_id} key={brand.brand_id}>
-                        {brand.name}
-                      </option>
-                    );
-                  })}
+                  {brands.map((brand) => (
+                    <option value={brand.brand_id} key={brand.brand_id}>
+                      {brand.name}
+                    </option>
+                  ))}
                 </select>
-                {/* {priceError !== "" && (
-                    <p className="pb-2 text-red-500 text-sm">{priceError}</p>
-                  )} */}
               </div>
               <div className="flex flex-col gap-1 py-2">
-                <label htmlFor="name" className="text-sm text-gray-600">
+                <label htmlFor="image" className="text-sm text-gray-600">
                   Image *
                 </label>
                 <input
-                  required={isAdd ? true : false}
+                  required={isAdd}
                   name="image"
                   title="image"
                   type="file"
                   onChange={handleChange}
                   accept="image/jpeg, image/png, image/jpg"
-                  className={`border outline-none rounded-md placeholder:text-sm border-slate-300 file:border-none file:px-3 file:py-2 file:mr-2 file:cursor-pointercursor-pointer`}
+                  className="border outline-none rounded-md placeholder:text-sm border-slate-300 file:border-none file:px-3 file:py-2 file:mr-2 file:cursor-pointer"
                 />
               </div>
             </div>
@@ -245,18 +238,17 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
               } gap-2 gap-y-0`}
             >
               <div className="flex flex-col gap-1 py-2">
-                <label htmlFor="name" className="text-sm text-gray-600">
+                <label htmlFor="description" className="text-sm text-gray-600">
                   Description *
                 </label>
                 <textarea
                   required
                   name="description"
-                  value={description ?? ""}
+                  value={description}
                   onChange={handleChange}
                   title="description"
-                  type="text"
-                  placeholder="enter the description of the product"
-                  className={`border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300`}
+                  placeholder="Enter the description of the product"
+                  className="border outline-none px-3 py-2 rounded-md placeholder:text-sm border-slate-300"
                 />
               </div>
               {!isAdd && data && (
@@ -264,7 +256,7 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
                   <div className="flex gap-x-3">
                     <img
                       src={`${apiUrl}${imagePath}`}
-                      alt="no image"
+                      alt="Product"
                       className="object-fill rounded-lg max-w-[150px]"
                     />
                   </div>
@@ -273,37 +265,37 @@ export default function ProductModal({ closeHandler, isAdd, data }) {
             </div>
             <div className="flex gap-x-6">
               <div className="flex gap-x-3 py-2 items-center">
-                <label htmlFor="email" className="text-sm text-gray-600">
+                <label htmlFor="featured" className="text-sm text-gray-600">
                   Featured
                 </label>
                 <input
                   name="featured"
                   type="checkbox"
                   title="featured"
-                  checked={featured === 1}
-                  onChange={handleChange}
-                  className={`border  outline-none px-3 rounded-md placeholder:text-sm border-slate-300`}
+                  checked={featured}
+                  onChange={(e) =>
+                    handleChange({
+                      target: { name: "featured", value: e.target.checked },
+                    })
+                  }
+                  className="border outline-none rounded-md border-slate-300"
                 />
               </div>
             </div>
-
-            <div className="md:pt-8 md:pb-2 md:flex justify-between items-center">
-              <p className="text-xs">*This field is mandatory</p>
-              <div className="flex gap-2 items-center pt-3 justify-end">
-                <button
-                  type="button"
-                  onClick={closeHandler}
-                  className="px-6 py-2 border border-black text-sm rounded-lg hover:bg-black hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 border border-black text-sm rounded-lg bg-black text-white"
-                >
-                  {isAdd ? "Add" : "Update"}
-                </button>
-              </div>
+            <div className="flex justify-end gap-x-4 py-2">
+              <button
+                type="button"
+                className="py-2 px-4 rounded-md bg-red-500 text-white"
+                onClick={closeHandler}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="py-2 px-4 rounded-md bg-blue-500 text-white"
+              >
+                {isAdd ? "Add Product" : "Update Product"}
+              </button>
             </div>
           </form>
         </div>

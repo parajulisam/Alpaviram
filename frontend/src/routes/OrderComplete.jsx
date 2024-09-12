@@ -2,17 +2,18 @@ import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 const OrderComplete = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const payID = searchParams.get("pidx");
+  const [searchParams] = useSearchParams();
+  const payID = searchParams.get("pidx"); // Getting 'pidx' from the URL
+
   return (
     <>
-      <div className=" my-32">
+      <div className="my-32">
         <h1 className="flex justify-center text-3xl my-16">
           Thank you for purchasing with us!
         </h1>
         {payID ? (
           <p className="flex justify-center">
-            Paymnet done with Khalti and payment ID : {payID}
+            Payment done with Khalti and payment ID : {payID}
           </p>
         ) : (
           <p className="flex justify-center">

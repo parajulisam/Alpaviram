@@ -3,15 +3,18 @@ import { IoClose, IoSearch } from "react-icons/io5";
 import { DropdownTableRow } from "../../components/Admin/Common/DropdownTableRow";
 import ProductModal from "../../components/Admin/Product/ProductModal";
 import axios from "axios";
-import { apiUrl } from "../../components/Product/ProductCard";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { MdDelete } from "react-icons/md";
 import DeleteProductModal from "../../components/Admin/Product/DeleteProductModal";
 
 const AdminProducts = () => {
   const [showModal, setShowModal] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [idToUpdate, setIdToUpdate] = useState(0);
+
   const toggleShowModal = () => {
     setShowModal(!showModal);
+    setIsUpdate(false); // Set to false when adding a new product
     if (showModal === false) {
       document.body.classList.add("disable-scrolling");
     } else {
@@ -19,8 +22,9 @@ const AdminProducts = () => {
     }
   };
 
-  const toggleUpdateShowModal = () => {
-    setIsUpdate(!isUpdate);
+  const toggleUpdateShowModal = (id) => {
+    setIsUpdate(true); // Set to true when updating a product
+    setIdToUpdate(id);
     setShowModal(!showModal);
     if (showModal === false) {
       document.body.classList.add("disable-scrolling");
@@ -30,11 +34,10 @@ const AdminProducts = () => {
   };
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const toggleShowDeleteModal = () => {
+  const toggleShowDeleteModal = (id) => {
+    setIdToUpdate(id);
     setShowDeleteModal(!showDeleteModal);
   };
-
-  const [isUpdate, setIsUpdate] = useState(false);
 
   const [searchString, setSearchString] = useState("");
   const handleSearchStringChange = (e) => {
@@ -47,39 +50,33 @@ const AdminProducts = () => {
   const perpage = 3;
   const [totalPages, setTotalPages] = useState(1);
 
-  const [idToUpdate, setIdToUpdate] = useState(0);
-
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data } = await axios.get("http://localhost:3001/api/v1/products");
-      console.log(data);  // Log data to console to inspect structure
-      setAllProducts(data);
+      try {
+        const { data } = await axios.get(
+          "http://localhost:3001/api/v1/products"
+        );
+        setAllProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
     };
     fetchProducts();
   }, [showModal, showDeleteModal]);
 
   useEffect(() => {
-    if (searchString !== "") {
-      const searchedData = allProducts.filter((product) =>
-        product.name.toLowerCase().includes(searchString.toLowerCase())
-      );
-      setTotalPages(Math.ceil(searchedData.length / perpage));
-      setCurrentPage(1);
-      setProductsToDisplay(
-        searchedData.slice(
-          currentPage * perpage - perpage,
-          currentPage * perpage
+    const filteredProducts = searchString
+      ? allProducts.filter((product) =>
+          product.name.toLowerCase().includes(searchString.toLowerCase())
         )
-      );
-    } else {
-      setTotalPages(Math.ceil(allProducts.length / perpage));
-      setProductsToDisplay(
-        allProducts.slice(
-          currentPage * perpage - perpage,
-          currentPage * perpage
-        )
-      );
-    }
+      : allProducts;
+    setTotalPages(Math.ceil(filteredProducts.length / perpage));
+    setProductsToDisplay(
+      filteredProducts.slice(
+        currentPage * perpage - perpage,
+        currentPage * perpage
+      )
+    );
   }, [allProducts, currentPage, searchString]);
 
   return (
@@ -107,7 +104,7 @@ const AdminProducts = () => {
         <div className="flex gap-x-3">
           <p
             className="p-2 bg-[#2c2c2c] px-4 rounded-md text-white cursor-pointer"
-            onClick={toggleShowModal}
+            onClick={toggleShowModal} // Open modal for adding product
           >
             Add Product
           </p>
@@ -124,7 +121,7 @@ const AdminProducts = () => {
         </div>
       </div>
 
-      <div className=" px-4 md:px-20 pb-10 overflow-x-scroll ">
+      <div className="px-4 md:px-20 pb-10 overflow-x-scroll ">
         <table className="table-auto bg-[#2C2C2C] md:w-full ">
           <thead className="rounded-lg">
             <tr>
@@ -165,7 +162,7 @@ const AdminProducts = () => {
                           <BiSolidEditAlt
                             onClick={() => {
                               setIdToUpdate(product.product_id);
-                              toggleUpdateShowModal();
+                              toggleUpdateShowModal(product.product_id);
                             }}
                             className="size-5 cursor-pointer"
                           />
@@ -173,7 +170,7 @@ const AdminProducts = () => {
                             className="size-5 text-red-500 cursor-pointer"
                             onClick={() => {
                               setIdToUpdate(product.product_id);
-                              toggleShowDeleteModal();
+                              toggleShowDeleteModal(product.product_id);
                             }}
                           />
                         </div>
@@ -208,17 +205,13 @@ const AdminProducts = () => {
             className={`px-2 bg-white rounded-sm text-xs shadow-sm py-1 cursor-pointer ${
               currentPage - 1 < 1 && "hidden"
             }`}
-            onClick={() => {
-              setCurrentPage(currentPage - 1);
-            }}
+            onClick={() => setCurrentPage(currentPage - 1)}
           >
             {currentPage - 1}
           </div>
           <div
             className="px-2 bg-black text-white rounded-sm text-xs shadow-sm py-1 cursor-pointer"
-            onClick={() => {
-              setCurrentPage(currentPage);
-            }}
+            onClick={() => setCurrentPage(currentPage)}
           >
             {currentPage}
           </div>
@@ -226,9 +219,7 @@ const AdminProducts = () => {
             className={`px-2 bg-white rounded-sm text-xs shadow-sm py-1 cursor-pointer ${
               currentPage + 1 > totalPages && "hidden"
             }`}
-            onClick={() => {
-              setCurrentPage(currentPage + 1);
-            }}
+            onClick={() => setCurrentPage(currentPage + 1)}
           >
             {currentPage + 1}
           </div>
