@@ -6,6 +6,8 @@ import tokenReducer from "./token/token-slice";
 import userRegisterReducer from "./userRegister/userRegister-slice";
 import productListReducer from "./featuredProducts/productList-slice";
 import categoryListReducer from "./category/categoryList-slice";
+import recommendedProductsReducer from "./recommendedProducts/productList-slice"; // Import the recommended products reducer
+
 const store = configureStore({
   reducer: {
     //user
@@ -23,6 +25,7 @@ const store = configureStore({
 
     //product
     featuredProductList: productListReducer,
+    recommendedProducts: recommendedProductsReducer,
   },
 });
 

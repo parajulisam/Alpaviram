@@ -1,7 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const storedAccessToken = localStorage.getItem("accessToken") 
+const storedRefreshToken =  localStorage.getItem("refreshToken")
+
+const hasToken = storedAccessToken && storedAccessToken
+
 const initialState = {
-  token: null,
+  token: hasToken? {accessToken: storedAccessToken, refreshToken: storedRefreshToken} : null
 };
 
 const tokenSlice = createSlice({

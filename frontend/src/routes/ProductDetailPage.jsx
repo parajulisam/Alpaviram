@@ -51,7 +51,7 @@ const ProductDetailPage = () => {
       });
     } else {
       dispatchRedux(
-        addToCart({ product_id, name, imagePath, price, countInStock, qty })
+        addToCart({ product_id, name, imagePath, price, countInStock, qty,  category_id: category.category_id, brand_id: brand.brand_id })
       );
     }
   };

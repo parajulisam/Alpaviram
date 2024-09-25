@@ -68,6 +68,76 @@ const findProductById = async (req, res) => {
   }
 };
 
+// Function to calculate recommendation score for a product based on preferences
+const calculateRecommendationScore = (product, preference) => {
+  let score = 0;
+
+  // Calculate score based on category preference
+  if (product.category_id && preference.category && preference.category[product.category_id]) {
+    score += preference.category[product.category_id];
+  }
+
+  // Calculate score based on brand preference
+  if (product.brand_id && preference.brand && preference.brand[product.brand_id]) {
+    score += preference.brand[product.brand_id];
+  }
+
+  return score;
+};
+
+// @desc    Fetch recommended products based on preferences
+// @route   POST /api/v1/get/recommendations
+// @access  Public
+const getRecommendedProducts = async (req, res) => {
+  try {
+    const preference = req.body;
+
+    if (!preference || typeof preference !== "object") {
+      return res.status(400).json({ message: "Invalid preferences format" });
+    }
+
+    let products = await Product.findAll({
+      include: [
+        {
+          model: Category,
+          attributes: ["category_id", "name"],
+        },
+        {
+          model: Brand,
+          attributes: ["brand_id", "name"],
+        },
+      ],
+    });
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: "No products found" });
+    }
+
+    // Apply recommendation scoring logic based on preferences
+    if (preference) {
+      products = products
+        .map((product) => {
+          const recommendationScore = calculateRecommendationScore(product, preference);
+          return {
+            ...product.dataValues, // Extract product data
+            recommendationScore,
+          };
+        })
+        .sort((a, b) => b.recommendationScore - a.recommendationScore); // Sort by recommendation score
+    } else {
+      // If no preference is provided, sort by newest products
+      products = products.sort((a, b) => b.createdAt - a.createdAt);
+    }
+
+    // Return only the top 10 recommended products
+    const topProducts = products.slice(0, 10);
+
+    return res.status(200).json(topProducts);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @desc    Create a product
 // @route   POST /api/v1/products
 // @access  Protected/Admin
@@ -377,6 +447,7 @@ const getFilteredProducts = async (req, res) => {
 
 export {
   findProductById,
+  getRecommendedProducts,
   getSearchedProducts,
   findAllProducts,
   findAllFeaturedProducts,

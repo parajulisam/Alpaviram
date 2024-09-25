@@ -5,12 +5,13 @@ import { addToCart } from "../../features/cart/cart-action";
 import Rating from "./Rating";
 import { toast } from "react-toastify";
 export const apiUrl = import.meta.env.VITE_URL;
+import { addPreference } from "../../utils/preference";
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state) => state.authUser); // Access authentication state
 
-  const { product_id, name, imagePath, price, countInStock, numReviews } =
+  const { product_id, name, imagePath, price, countInStock, numReviews, category_id, brand_id } =
     product;
   const qty = 1;
 
@@ -27,7 +28,7 @@ const ProductCard = ({ product }) => {
       });
     } else {
       dispatch(
-        addToCart({ product_id, name, imagePath, price, countInStock, qty })
+        addToCart({ product_id, name, imagePath, price, countInStock, qty, brand_id, category_id })
       );
     }
   };
@@ -35,7 +36,11 @@ const ProductCard = ({ product }) => {
   return (
     <div className="card border border-slate-300 shadow-2xl w-64 rounded-sm my-4 bg-[#F0F0F0] hover:scale-105 hover:duration-300 hover:ease-in-out mx-3">
       {/* imagePath */}
-      <Link to={`/products/${product.product_id}`}>
+      <Link to={`/products/${product.product_id}`}
+      onClick={()=>{
+        addPreference(category_id, brand_id, 1)
+      }}
+      >
         <div className="img border border-slate-300">
           <img
             src={`http://localhost:3001${imagePath}`}

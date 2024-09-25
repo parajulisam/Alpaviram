@@ -5,6 +5,8 @@ import CategoryCard from "../components/Category/CategoryCard";
 // import products from "../data/product";
 // import { categories } from "../data/category";
 import { useDispatch, useSelector } from "react-redux";
+
+import { getRecommendedProducts } from "../features/recommendedProducts/product-actions";
 import { getFeaturedProductList } from "../features/featuredProducts/product-actions";
 import { getCategoryList } from "../features/category/category-actions";
 import { Link } from "react-router-dom";
@@ -16,9 +18,13 @@ const Products = () => {
   const productList = useSelector((state) => state.featuredProductList);
   const { products } = productList;
 
+  const recommendedProductList = useSelector((state) => state.recommendedProducts);
+  const { products: recommendedProducts } = recommendedProductList;
+
   const categoryList = useSelector((state) => state.categoryList);
   const { categories } = categoryList;
   useEffect(() => {
+    dispatch(getRecommendedProducts());
     dispatch(getFeaturedProductList());
     dispatch(getCategoryList());
   }, [dispatch]);
@@ -39,6 +45,24 @@ const Products = () => {
         {/* title */}
         <div className="title flex justify-center  py-2">
           <span className="font-medium text-xl uppercase md:text-2xl px-4 tracking-wide ">
+            Recommendation
+          </span>
+        </div>
+
+        {/* featured products */}
+        <div className="flex flex-wrap justify-evenly  px-4 ">
+          {recommendedProducts.map((product) => (
+            <ProductCard product={product} key={product.product_id} />
+          ))}
+        </div>
+        {/* end of featured products */}
+
+        <br />
+        <br />
+
+        {/* title */}
+        <div className="title flex justify-center  py-2">
+          <span className="font-medium text-xl uppercase md:text-2xl px-4 tracking-wide ">
             Featured Products
           </span>
         </div>
@@ -50,6 +74,9 @@ const Products = () => {
           ))}
         </div>
         {/* end of featured products */}
+
+        <br />
+        <br />
 
         {/* categories  title*/}
         <div className="title flex justify-center py-2  my-3 ">

@@ -6,6 +6,7 @@ import {
   deleteProduct,
   findAllFeaturedProducts,
   findProductById,
+  getRecommendedProducts,
   findAllProducts,
   updateProduct,
   createProductReview,
@@ -30,5 +31,6 @@ router.get("/", findAllProducts);
 router.post("/", auth, authAdmin, createProduct);
 router.delete("/:id", auth, authAdmin, deleteProduct);
 router.put("/:id", auth, authAdmin, updateProduct);
+router.post("/get/recommendations",  getRecommendedProducts);
 router.get("/get/filter", getFilteredProducts);
 export default router;

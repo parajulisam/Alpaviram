@@ -6,6 +6,7 @@ import Rating from "./Rating";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { apiUrl } from "./ProductCard";
+import { addPreference } from "../../utils/preference";
 
 const Review = ({ reviews, reviewUpdated }) => {
   // For Review Form
@@ -98,13 +99,27 @@ const Review = ({ reviews, reviewUpdated }) => {
         config
       );
 
+
       toast.success("Review submitted!", {
         position: "top-right",
         style: { backgroundColor: "black", color: "white" },
       });
-
+      
       setComment("");
       reviewUpdated();
+
+      // Add preference after review
+      try {
+        const { data } = await axios.get(
+          `http://localhost:3001/api/v1/products/${params.id}`
+        );
+
+        const {category, brand} = data;
+        addPreference(category.category_id, brand.brand_id, 3)
+      }catch (e) {
+        console.log("Couldn't update user preference")
+        }
+        
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message);
     }

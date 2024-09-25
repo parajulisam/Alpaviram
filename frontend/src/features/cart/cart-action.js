@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import { addItemToCart, removeItemFromCart, replaceCart } from "./cart-slice";
 import localForage from "localforage";
+import { addPreference } from "../../utils/preference";
 
 export const addToCart = (item) => async (dispatch, getState) => {
   const { userId, userInfo } = getState().authUser; // Retrieve userId and userInfo
@@ -22,6 +23,9 @@ export const addToCart = (item) => async (dispatch, getState) => {
       style: { backgroundColor: "black", color: "white" },
     });
   }
+
+  // Update user preference to the localStorage
+  addPreference(item.category_id, item.brand_id, 2)
 
   dispatch(addItemToCart(item));
 
