@@ -31,8 +31,8 @@ export const Login = () => {
   }, [userInfo]);
 
   const onSubmit = (data) => {
-    console.log(data);
-    alert(JSON.stringify(data));
+    // console.log(data);
+    // alert(JSON.stringify(data));
     dispatch(authUser(data));
     reset();
   };

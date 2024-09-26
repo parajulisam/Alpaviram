@@ -24,7 +24,7 @@ const SignUp = () => {
   );
 
   const onSubmit = (data) => {
-    alert(JSON.stringify(data));
+    // alert(JSON.stringify(data));
     dispatch(registerUser(data));
     reset();
   };

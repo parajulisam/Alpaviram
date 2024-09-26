@@ -1,5 +1,5 @@
 {
-    "name": "code",
+    "name": "alpaviram",
     "version": "1.0.0",
     "description": "eCommerce webApp AlpaviramHub using expressjs, sequelize, mysql",
     "main": "server.js",
@@ -8,7 +8,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "nodemon backend/server.js"
     },
-    "author": "Ayush Kazi Shrestha",
+    "author": "Ram Saran Baniya, Samir Parajuli, Sworup Paudel",
     "license": "ISC",
     "dependencies": {
         "axios": "^1.6.8",
