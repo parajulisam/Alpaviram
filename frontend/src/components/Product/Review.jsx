@@ -119,6 +119,7 @@ const Review = ({ reviews, reviewUpdated }) => {
       }catch (e) {
         console.log("Couldn't update user preference")
         }
+      // Add preference after review
         
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message);
