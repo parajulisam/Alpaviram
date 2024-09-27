@@ -28,7 +28,7 @@ const ProductsByCategory = () => {
   console.log("Products state:", products); // Log products state to see what gets rendered
 
   return (
-    <div className="product-list">
+    <div className="product-list flex w-full flex-wrap justify-evenly">
       {Array.isArray(products) && products.length > 0 ? (
         products.map((product) => (
           <ProductCard key={product.product_id} product={product} />

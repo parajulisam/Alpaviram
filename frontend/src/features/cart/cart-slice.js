@@ -11,6 +11,18 @@ const cartSlice = createSlice({
   },
 
   reducers: {
+    updateItemQuantity(state, action) {
+      const { productId, qty } = action.payload;
+      const item = state.cartItems.find((item) => item.product_id === productId);
+    
+      if (item) {
+        item.qty = qty;
+      }
+    
+      // Recalculate the total quantity and total price
+      cartSlice.caseReducers.calculateQtyAndTotal(state);
+    },
+
     calculateQtyAndTotal(state) {
       state.totalQuantity = state.cartItems.reduce(
         (acc, item) => acc + item.qty,
@@ -80,6 +92,7 @@ const cartSlice = createSlice({
 
 export const {
   calculateQtyAndTotal,
+  updateItemQuantity,
   addItemToCart,
   removeItemFromCart,
   replaceCart,

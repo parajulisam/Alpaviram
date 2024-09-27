@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ImBin } from "react-icons/im";
 import { useDispatch } from "react-redux";
-import { removeFromCart } from "../../features/cart/cart-action";
+import { removeFromCart, updateCartQuantity } from "../../features/cart/cart-action";
 import { apiUrl } from "../Product/ProductCard";
 // import { removeProduct } from "../../features/cart-slice";
 
@@ -15,12 +15,17 @@ export const CartCard = ({ item }) => {
   };
 
   const handlePlusButton = () => {
-    setQty(qty + 1);
+    const newQty = qty + 1;
+    setQty(newQty);
+    dispatch(updateCartQuantity(item.product_id, newQty));
   };
 
-  //qty deduct
   const handleMinusButton = () => {
-    if (qty > 1) setQty(qty - 1);
+    if (qty > 1) {
+      const newQty = qty - 1;
+      setQty(newQty);
+      dispatch(updateCartQuantity(item.product_id, newQty));
+    }
   };
 
   return (

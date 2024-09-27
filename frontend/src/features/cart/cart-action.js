@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { addItemToCart, removeItemFromCart, replaceCart } from "./cart-slice";
+import { addItemToCart, removeItemFromCart, replaceCart, updateItemQuantity } from "./cart-slice";
 import localForage from "localforage";
 import { addPreference } from "../../utils/preference";
 
@@ -37,6 +37,17 @@ export const addToCart = (item) => async (dispatch, getState) => {
     position: "bottom-right",
     style: { backgroundColor: "black", color: "white" },
   });
+};
+
+// Update Items quantity in cart
+export const updateCartQuantity = (productId, qty) => async (dispatch, getState) => {
+  dispatch(updateItemQuantity({ productId, qty }));
+
+  const { userId } = getState().authUser;
+
+  if (userId) {
+    await localForage.setItem(`cartItems_${userId}`, getState().cart.cartItems); // Sync updated cart with local storage
+  }
 };
 
 // Remove from cart action with userId

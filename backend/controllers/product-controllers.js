@@ -389,21 +389,23 @@ const createProductReview = async (req, res) => {
 // @access  Public
 
 const getSearchedProducts = async (req, res) => {
-  const keyword = req.query.keyword.toLowerCase();
+  const keyword = req.query.keyword.toLowerCase(); // Convert the keyword to lowercase
 
-  const matchedProducts = await Product.findAll({
-    where: {
-      name: {
-        [Op.like]: `%${keyword}%`,
-      },
-    },
+  try {
+    // Fetch all products from the database
+    const allProducts = await Product.findAll();
 
-    // limit: pageSize,
-    // offset: pageSize * (page - 1),
-  });
+    // Filter the products that include the keyword in their name
+    const matchedProducts = allProducts.filter(product =>
+      product.name.toLowerCase().includes(keyword)
+    );
 
-  res.json({ matchedProducts });
+    res.json({ matchedProducts });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred while searching for products." });
+  }
 };
+
 const getFilteredProducts = async (req, res) => {
   const { category_id, brand_id, rating, price } = req.query;
   let query = {};
